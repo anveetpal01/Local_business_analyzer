@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Business Social Presence Analyzer</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body>
+<div class="container mt-4">
+    <h2>Business Social Presence Analyzer</h2>
+    <form method="POST" class="mb-4">
+        <div class="row">
+            <div class="col-md-3 mb-2">
+                <input type="text" name="city" class="form-control" placeholder="City Name" value="{{ city }}" required>
+            </div>
+            <div class="col-md-3 mb-2">
+                <input type="text" name="keyword" class="form-control" placeholder="Business Keyword" value="{{ keyword }}" required>
+            </div>
+            <div class="col-md-2 mb-2">
+                <select name="num_results" class="form-control">
+                    {% for n in [10,20,30,40,50] %}
+                    <option value="{{n}}" {% if num_results == n %}selected{% endif %}>Top {{n}}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2 mb-2">
+                <button type="submit" class="btn btn-primary w-100">Scrape</button>
+            </div>
+        </div>
+    </form>
+
+    <form method="GET" class="mb-3">
+        <div class="row align-items-center">
+            <div class="col-md-2">
+                <input type="checkbox" name="no_website" id="no_website" 
+                       {% if remove_website %}checked{% endif %} onchange="this.form.submit()">
+                <label for="no_website">Hide Website</label>
+            </div>
+            <div class="col-md-2">
+                <input type="checkbox" name="no_instagram" id="no_instagram" 
+                       {% if remove_instagram %}checked{% endif %} onchange="this.form.submit()">
+                <label for="no_instagram">Hide Instagram</label>
+            </div>
+            <div class="col-md-3">
+                <input type="checkbox" name="has_website" id="has_website" 
+                       {% if has_website %}checked{% endif %} onchange="this.form.submit()">
+                <label for="has_website">Only Websites</label>
+            </div>
+            <div class="col-md-3 mb-2">
+                <input type="text" name="search" class="form-control"
+                       placeholder="Search by name or phone" value="{{ search_query }}">
+            </div>
+            <div class="col-md-2">
+                <a href="{{ url_for('download') }}" class="btn btn-success w-100">Download CSV</a>
+            </div>
+        </div>
+    </form>
+
+    {% if results %}
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Business Name</th>
+                <th>Contact No</th>
+                {% if not remove_website %}
+                <th>Website</th>
+                {% endif %}
+                {% if not remove_instagram %}
+                <th>Instagram</th>
+                <th>Bio</th>
+                <th>Followers</th>
+                {% endif %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in results %}
+            <tr>
+                <td>{{ row['name'] }}</td>
+                <td>{{ row['phone'] }}</td>
+                {% if not remove_website %}
+                <td>
+                    {% if row['website'] != 'Not found' %}
+                    <a href="{{ row['website'] }}" target="_blank">{{ row['website'] }}</a>
+                    {% else %}
+                    Not found
+                    {% endif %}
+                </td>
+                {% endif %}
+                {% if not remove_instagram %}
+                <td>{{ row['instagram'] }}</td>
+                <td>{{ row['bio'] }}</td>
+                <td>{{ row['followers'] }}</td>
+                {% endif %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <!-- Pagination Controls -->
+    {% if total_pages > 1 %}
+    <nav>
+      <ul class="pagination">
+        {% if page > 1 %}
+        <li class="page-item">
+          <a class="page-link" href="?page={{ page-1 }}{% if remove_website %}&no_website=on{% endif %}{% if remove_instagram %}&no_instagram=on{% endif %}{% if has_website %}&has_website=on{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">Previous</a>
+        </li>
+        {% endif %}
+        {% for p in range(1, total_pages+1) %}
+        <li class="page-item {% if p == page %}active{% endif %}">
+          <a class="page-link" href="?page={{ p }}{% if remove_website %}&no_website=on{% endif %}{% if remove_instagram %}&no_instagram=on{% endif %}{% if has_website %}&has_website=on{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">{{ p }}</a>
+        </li>
+        {% endfor %}
+        {% if page < total_pages %}
+        <li class="page-item">
+          <a class="page-link" href="?page={{ page+1 }}{% if remove_website %}&no_website=on{% endif %}{% if remove_instagram %}&no_instagram=on{% endif %}{% if has_website %}&has_website=on{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">Next</a>
+        </li>
+        {% endif %}
+      </ul>
+    </nav>
+    {% endif %}
+    {% elif city and keyword %}
+        <p>No results found. Try a different search.</p>
+    {% endif %}
+</div>
+</body>
+</html>
